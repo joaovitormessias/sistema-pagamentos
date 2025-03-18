@@ -1,34 +1,47 @@
 from django.db import models
 
 # O Django vai manipular essas informações com o ORM. 
-# Representação das informações do Banco de Dados
+# Representação das informações do Banco de Dados.
 
 #Models
 
-# Entidade Cliente 
+# Entidade Cliente, dados da pessoa ou da empresa.
+# Cada cliente pode fazer vários pedidos e pode ter preços personalizdos para produtos através da tabela de preços.
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
     nome_cliente = models.CharField(max_length=100,blank=False)
     email_cliente = models.EmailField(max_length=50,blank=False)
-    CNPJ = models.CharField(max_length=14,unique=True, blank=False)
+    CNPJ = models.CharField(max_length=14,unique=True, blank=True)
 
-    # Representando objeto cliente como tipo string
+    # Representando objeto cliente como tipo string.
     def __str__(self):
         return self.nome_cliente
 
-# Entidade Produto
+# Entidade Produto, especificações do produto. 
+# Cada produto tem um preço base e pode estar em diferentes pedidos e vendas.
 class Produto(models.Model):
     id_produto = models.AutoField(primary_key=True)
-    nome_produto = models.CharField(max_length=50, blank=True)
-    preco_padrao = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
-    descricao_produto = models.TextField(blank=True)
+    nome_produto = models.CharField(max_length=50, blank=False)
+    preco_padrao = models.DecimalField(max_digits=10, decimal_places=2, blank=False)
+    descricao_produto = models.TextField(blank=False)
     data_validade_produto = models.DateField()
 
-    # Retorna o objeto nome do produto
+    # Retorna o objeto nome do produto.
     def __str__(self):
         return self.nome_produto
     
-# Entidade Pedido
+# Entidade Estoque, para armazenar os produtos. 
+# Controla a quantidade de produtos disponíveis no estoque, além de manter registros de quando os produtos entram e saem do estoque.
+class Estoque(models.Model):
+    id_estoque = models.AutoField(primary_key=True)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    quantidade_disponivel = models.IntegerField(default=0)
+    data_entrada = models.DateTimeField(auto_now_add=True)
+    data_saida = models.DateTimeField(null=True, blank=True)
+    quantidade_disponivel = models.IntegerField(default=0)
+    
+# Entidade Pedido, representa a solicitação de compra do cliente.
+# Serve como um registro inicial de compras, antes da venda ser finalizada. O status de um pedido pode mudar com base no processo de pagamento e venda.
 class Pedido(models.Model):
     id_pedido = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
@@ -37,14 +50,15 @@ class Pedido(models.Model):
         max_length=20,
         choices=[("pendente","Pendente"),("realizado","Realizado"),("cancelado","Cancelado")],
         default="pendente",
-        blank=True
+        blank=False
     )
 
     # Retorna o pedido realizado pelo cliente
     def __str__(self):
         return f'Pedido {self.id_pedido} - {self.cliente.nome_cliente}'
 
-# Entidade Condição de Pagamento
+# Entidade Pagamento, representa o pagamento feito para um pedido.
+# Controla detalhes do pagamento, como método (cartão, boleto, etc.) status do pagamento (pendente, aprovado, recusado) e data de processamento.
 class Pagamento(models.Model):
     id_pagamento = models.AutoField(primary_key=True)
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
@@ -52,13 +66,13 @@ class Pagamento(models.Model):
         max_length=20,
         choices=[("cartao","Cartão"),("boleto","Boleto"),("pix","PIX"),("dinheiro","Dinheiro"),("transferencia","Transferência")],
         default="cartao",
-        blank=True
+        blank=False
     )
     status_pagamento = models.CharField(
         max_length=20,
         choices=[("pendente","Pendente"),("aprovado","Aprovado"),("recusado","Recusado"),("cancelado","Cancelado")],
         default="pendente",
-        blank=True
+        blank=False
     )
     data_pagamento = models.DateTimeField(null=True, blank=True)
 
@@ -66,7 +80,8 @@ class Pagamento(models.Model):
     def __str__(self):
         return f"Pagamento {self.id_pagamento} - Pedido {self.pedido.id_pedido}"
     
-# Entidade Venda
+# Entidade Venda, representa a transação concluída após o pagamento do pedido.
+# A venda é a finalização do processo de compra, onde o pagamento confirmado e o produto foi entregue ou está pronto para entrega.
 class Venda(models.Model):
     id_venda = models.AutoField(primary_key=True)
     pedido = models.ForeignKey(Pedido,on_delete=models.CASCADE)
@@ -77,25 +92,27 @@ class Venda(models.Model):
         max_length=20,
         choices=[("pendente","Pendente"),("concluida","Concluída"),("cancelada","Cancelada")],
         default="pendente",
-        blank=True
+        blank=False
     )
     # Retorna o ID da venda e o nome do cliente
     def __str__(self):
         return f'Venda: {self.id_venda} - Cliente {self.cliente.nome_cliente}'
     
-# Entidade Item de Venda
+# Entidade Item de Venda, representa um produto específico que foi comprado em uma venda.
+# Contém detalhes como a quantidade comprada e o preco unitário no momento da compra.
 class ItemVenda(models.Model):
     id_item = models.AutoField(primary_key=True)
     venda = models.ForeignKey(Venda, on_delete=models.CASCADE)
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    preco_unitario = models.DecimalField(max_digits=10,decimal_places=2, blank= True)
+    preco_unitario = models.DecimalField(max_digits=10,decimal_places=2, blank= False)
     quantidade = models.IntegerField(blank=True)
 
     # Retorna o nome e a quantidade do produto vendida
     def __str__(self):
         return f'{self.produto.nome_produto} (Quantidade: {self.quantidade})'
 
-# Entidade de Tabela de Preços
+# Entidade de Tabela de Preços, serve para armazenar os preços personalizados dos produtos para clientes específicos.
+# Permite fornecer preços diferenciados para diferentes clientes
 class TabelaPreco(models.Model):
     id_tabela = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente,on_delete=models.CASCADE)
