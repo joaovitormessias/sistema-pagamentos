@@ -38,18 +38,19 @@ class Estoque(models.Model):
     quantidade_disponivel = models.IntegerField(default=0)
     data_entrada = models.DateTimeField(auto_now_add=True)
     data_saida = models.DateTimeField(null=True, blank=True)
-    quantidade_disponivel = models.IntegerField(default=0)
     
 # Entidade Pedido, representa a solicitação de compra do cliente.
 # Serve como um registro inicial de compras, antes da venda ser finalizada. O status de um pedido pode mudar com base no processo de pagamento e venda.
 class Pedido(models.Model):
     id_pedido = models.AutoField(primary_key=True)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, null=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    quantidade_pedido = models.IntegerField(default=0)
     data_pedido = models.DateField(auto_now_add=True)
     status_pedido = models.CharField(
         max_length=20,
-        choices=[("pendente","Pendente"),("realizado","Realizado"),("cancelado","Cancelado")],
-        default="pendente",
+        choices=[("naorealizado","Não realizado"),("pendente","Pendente"),("realizado","Realizado"),("cancelado","Cancelado")],
+        default="naorealizado",
         blank=False
     )
 
@@ -66,7 +67,14 @@ class Pagamento(models.Model):
         max_length=20,
         choices=[("cartao","Cartão"),("boleto","Boleto"),("pix","PIX"),("dinheiro","Dinheiro"),("transferencia","Transferência")],
         default="cartao",
-        blank=False
+        blank=False,
+        null=True
+    )
+    quantidade_parcelas = models.CharField(
+        max_length=10,
+        choices = [('avista','Avista'),('duas','2x'),('tres','3x'),('quatro','4x'),('cinco', '5x'),('seis', '6x'),('sete','7x'),('oito', '8x'), ('nove','9x'),('dez','10x'),('onze', '11x'),('doze','12x')],
+        default="avista",
+        blank=False,
     )
     status_pagamento = models.CharField(
         max_length=20,
@@ -74,7 +82,7 @@ class Pagamento(models.Model):
         default="pendente",
         blank=False
     )
-    data_pagamento = models.DateTimeField(null=True, blank=True)
+    data_pagamento = models.DateTimeField(auto_now_add=True)
 
     # Retorna o objeto do pagamento e pedido
     def __str__(self):
@@ -98,6 +106,7 @@ class Venda(models.Model):
     def __str__(self):
         return f'Venda: {self.id_venda} - Cliente {self.cliente.nome_cliente}'
     
+# Passivel de remocao    
 # Entidade Item de Venda, representa um produto específico que foi comprado em uma venda.
 # Contém detalhes como a quantidade comprada e o preco unitário no momento da compra.
 class ItemVenda(models.Model):

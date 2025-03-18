@@ -1,5 +1,5 @@
 from django.contrib import admin
-from sistema_pagamentos.models import Cliente
+from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido, Pagamento,  Venda, ItemVenda, TabelaPreco
 
 # Registrando modelos no nosso admin para criar clientes, tabela de preços, estoque, etc.
 
@@ -14,3 +14,59 @@ class Clientes(admin.ModelAdmin):
 # param(1) -> modelo que foi importado 
 # param(2) -> configuração do modelo, ou seja, classe criada
 admin.site.register(Cliente, Clientes)
+
+class Produtos(admin.ModelAdmin):
+    list_display = ('id_produto', 'nome_produto','preco_padrao','descricao_produto','data_validade_produto')
+    list_display_links = ('id_produto', 'nome_produto','preco_padrao')
+    search_fields = ('id_produto','nome_produto',)
+    list_per_page = 20
+
+admin.site.register(Produto, Produtos)
+
+class Estoques(admin.ModelAdmin):
+    list_display = ('id_estoque', 'produto', 'quantidade_disponivel', 'data_entrada', 'data_saida')
+    list_display_links = ('id_estoque','produto')
+    search_fields = ('id_estoque','produto',)
+    list_per_page = 20
+
+admin.site.register(Estoque,Estoques)
+
+class Pedidos(admin.ModelAdmin):
+    list_display = ('id_pedido','produto','quantidade_pedido', 'cliente', 'data_pedido', 'status_pedido')
+    list_display_links = ('id_pedido','cliente')
+    search_fields = ('id_pedido','cliente',)
+    list_per_page = 20
+
+admin.site.register(Pedido,Pedidos)
+
+class Pagamentos(admin.ModelAdmin):
+    list_display = ('id_pagamento', 'pedido', 'metodo_pagamento','quantidade_parcelas','status_pagamento', 'data_pagamento')
+    list_display_links = ('id_pagamento','pedido')
+    search_fields = ('id_pagamento',)
+    list_per_page = 20
+
+admin.site.register(Pagamento, Pagamentos)
+
+class Vendas(admin.ModelAdmin):
+    list_display = ('id_venda','pedido', 'cliente', 'pagamento','data_venda','status_venda')
+    list_display_links = ('id_venda','pedido', 'cliente')
+    search_fields = ('id_venda',)
+    list_per_page = 20
+    
+admin.site.register(Venda,Vendas)
+
+# Passivel de remocao, pois a relacao no banco de dados nao faz sentido
+class ItensVenda(admin.ModelAdmin):
+    list_display = ('id_item', 'venda', 'produto', 'preco_unitario', 'quantidade')
+    list_display_links = ('id_item',)
+    search_fields = ('id_item','produto',)
+    list_per_page = 20
+
+admin.site.register(ItemVenda,ItensVenda)
+
+class TabelaPrecos(admin.ModelAdmin):
+    list_display = ('id_tabela', 'cliente', 'produto','preco_personalizado')
+    list_display_links = ('id_tabela',)
+    list_per_page = 20
+
+admin.site.register(TabelaPreco, TabelaPrecos)
