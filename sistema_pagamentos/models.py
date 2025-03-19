@@ -5,6 +5,9 @@ from django.db import models
 
 #Models
 
+## Inserir lógica para o banco de dados [ não feita ]
+## Evitar redundância no modelo atraves do @property [ em andamento ]
+
 # Entidade Cliente, dados da pessoa ou da empresa.
 # Cada cliente pode fazer vários pedidos e pode ter preços personalizdos para produtos através da tabela de preços.
 class Cliente(models.Model):
@@ -121,14 +124,27 @@ class Venda(models.Model):
 # Passivel de remocao    
 # Entidade Item de Venda, representa um produto específico que foi comprado em uma venda.
 # Contém detalhes como a quantidade comprada e o preco unitário no momento da compra.
-class ItemVenda(models.Model):
-    id_item = models.AutoField(primary_key=True)
+class HistoricoCompra(models.Model):
+    id_historico = models.AutoField(primary_key=True)
     venda = models.ForeignKey(Venda, on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    preco_unitario = models.DecimalField(max_digits=10,decimal_places=2, blank= False)
-    quantidade = models.IntegerField(blank=True)
+    
+    @property
+    def exibir_cliente(self):
+        return self.venda.cliente.nome_cliente
+    
+    @property
+    def exibir_produto(self):
+        return self.venda.pedido.produto.nome_produto
+
+    @property
+    def valor_produto(self):
+        return self.venda.pedido.produto.preco_padrao
+
+    @property
+    def metodo_pagamento(self):
+        return self.venda.pagamento.metodo_pagamento
 
     # Retorna o nome e a quantidade do produto vendida
     def __str__(self):
-        return f'{self.produto.nome_produto} (Quantidade: {self.quantidade})'
+        return f'{self.venda.pedido.produto.nome_produto}'
 

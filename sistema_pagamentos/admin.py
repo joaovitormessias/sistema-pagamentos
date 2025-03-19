@@ -1,5 +1,5 @@
 from django.contrib import admin
-from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido, Pagamento,  Venda, ItemVenda, TabelaPreco
+from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido, Pagamento,  Venda, HistoricoCompra, TabelaPreco
 
 # Registrando modelos no nosso admin para criar clientes, tabela de preços, estoque, etc.
 
@@ -55,14 +55,14 @@ class Vendas(admin.ModelAdmin):
     
 admin.site.register(Venda,Vendas)
 
-# Passivel de remocao, pois a relacao no banco de dados nao faz sentido
-class ItensVenda(admin.ModelAdmin):
-    list_display = ('id_item', 'venda', 'produto', 'preco_unitario', 'quantidade')
-    list_display_links = ('id_item',)
-    search_fields = ('id_item','produto',)
+
+class HistoricoCompras(admin.ModelAdmin):
+    list_display = ('id_historico','exibir_cliente', 'exibir_produto', 'metodo_pagamento', 'valor_produto')
+    list_display_links = ('id_historico',)
+    search_fields = ('id_historico','produto',)
     list_per_page = 20
 
-admin.site.register(ItemVenda,ItensVenda)
+admin.site.register(HistoricoCompra,HistoricoCompras)
 
 class TabelaPrecos(admin.ModelAdmin):
     list_display = ('id_tabela', 'cliente', 'produto','preco_personalizado')
