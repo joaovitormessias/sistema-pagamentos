@@ -11,7 +11,7 @@ class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
     nome_cliente = models.CharField(max_length=100,blank=False)
     email_cliente = models.EmailField(max_length=50,blank=False)
-    CNPJ = models.CharField(max_length=14,unique=True, blank=True)
+    CNPJ = models.CharField(max_length=14,unique=True, blank=True, null=True)
 
     # Representando objeto cliente como tipo string.
     def __str__(self):
@@ -43,8 +43,8 @@ class Estoque(models.Model):
 # Serve como um registro inicial de compras, antes da venda ser finalizada. O status de um pedido pode mudar com base no processo de pagamento e venda.
 class Pedido(models.Model):
     id_pedido = models.AutoField(primary_key=True)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, null=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, null=True)
     quantidade_pedido = models.IntegerField(default=0)
     data_pedido = models.DateField(auto_now_add=True)
     status_pedido = models.CharField(
@@ -57,6 +57,18 @@ class Pedido(models.Model):
     # Retorna o pedido realizado pelo cliente
     def __str__(self):
         return f'Pedido {self.id_pedido} - {self.cliente.nome_cliente}'
+    
+# Entidade de Tabela de Preços, serve para armazenar os preços personalizados dos produtos para clientes específicos.
+# Permite fornecer preços diferenciados para diferentes clientes
+class TabelaPreco(models.Model):
+    id_tabela = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(Cliente,on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    preco_personalizado = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Retorna o preço personalizado para o determinado cliente
+    def __str__(self):
+        return f'Preço personalizado para {self.cliente.nome_cliente} para produto {self.produto.nome_produto}, valor atualizado: {self.preco_personalizado} '
 
 # Entidade Pagamento, representa o pagamento feito para um pedido.
 # Controla detalhes do pagamento, como método (cartão, boleto, etc.) status do pagamento (pendente, aprovado, recusado) e data de processamento.
@@ -120,14 +132,3 @@ class ItemVenda(models.Model):
     def __str__(self):
         return f'{self.produto.nome_produto} (Quantidade: {self.quantidade})'
 
-# Entidade de Tabela de Preços, serve para armazenar os preços personalizados dos produtos para clientes específicos.
-# Permite fornecer preços diferenciados para diferentes clientes
-class TabelaPreco(models.Model):
-    id_tabela = models.AutoField(primary_key=True)
-    cliente = models.ForeignKey(Cliente,on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    preco_personalizado = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Retorna o preço personalizado para o determinado cliente
-    def __str__(self):
-        return f'Preço personalizado para {self.cliente.nome_cliente} para produto {self.produto.nome_produto}, valor atualizado: {self.preco_personalizado} '
