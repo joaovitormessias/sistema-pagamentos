@@ -39,6 +39,13 @@ class Pedidos(admin.ModelAdmin):
 
 admin.site.register(Pedido,Pedidos)
 
+class TabelaPrecos(admin.ModelAdmin):
+    list_display = ('id_tabela', 'cliente', 'produto','preco_personalizado')
+    list_display_links = ('id_tabela',)
+    list_per_page = 20
+
+admin.site.register(TabelaPreco, TabelaPrecos)
+
 class Pagamentos(admin.ModelAdmin):
     list_display = ('id_pagamento', 'pedido', 'metodo_pagamento','quantidade_parcelas','status_pagamento', 'data_pagamento')
     list_display_links = ('id_pagamento','pedido')
@@ -64,9 +71,4 @@ class HistoricoCompras(admin.ModelAdmin):
 
 admin.site.register(HistoricoCompra,HistoricoCompras)
 
-class TabelaPrecos(admin.ModelAdmin):
-    list_display = ('id_tabela', 'cliente', 'produto','preco_personalizado')
-    list_display_links = ('id_tabela',)
-    list_per_page = 20
 
-admin.site.register(TabelaPreco, TabelaPrecos)
