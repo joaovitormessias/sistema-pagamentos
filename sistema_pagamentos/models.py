@@ -14,7 +14,7 @@ class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
     nome_cliente = models.CharField(max_length=100,blank=False)
     email_cliente = models.EmailField(max_length=50,blank=False)
-    CNPJ = models.CharField(max_length=14,unique=True, blank=True, null=True)
+    CNPJ = models.CharField(max_length=14,unique=True, blank=True)
 
     # Representando objeto cliente como tipo string.
     def __str__(self):

@@ -4,7 +4,7 @@ from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido, TabelaP
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
-        fields = ['id_cliente','nome_cliente','email','cnpj']
+        fields = ['id_cliente','nome_cliente','email_cliente','CNPJ']
 
 class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,4 +40,4 @@ class VendaSerializer(serializers.ModelSerializer):
 class HistoricoCompraSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoricoCompra
-        fields = ['id_historico','venda']
+        fields = ['id_historico','venda','exibir_cliente']

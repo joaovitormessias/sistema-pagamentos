@@ -22,8 +22,8 @@ class PedidosViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
-class TabelaPrecos(viewsets.ModelViewSet):
-    queryset = TabelaPreco
+class TabelaPrecosViewSet(viewsets.ModelViewSet):
+    queryset = TabelaPreco.objects.all()
     serializer_class = TabelaPrecoSerializer
 
 class PagamentosViewSet(viewsets.ModelViewSet):
