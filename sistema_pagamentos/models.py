@@ -5,8 +5,7 @@ from django.db import models
 
 #Models
 
-## Inserir lógica para o banco de dados [ não feita ]
-## Evitar redundância no modelo atraves do @property [ em andamento ]
+## Inserir lógica para o banco de dados [ x ]
 
 # Entidade Cliente, dados da pessoa ou da empresa.
 # Cada cliente pode fazer vários pedidos e pode ter preços personalizdos para produtos através da tabela de preços.
@@ -14,7 +13,7 @@ class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
     nome_cliente = models.CharField(max_length=100,blank=False)
     email_cliente = models.EmailField(max_length=50,blank=False)
-    CNPJ = models.CharField(max_length=14,unique=True, blank=True)
+    cnpj = models.CharField(max_length=14,blank=True)
 
     # Representando objeto cliente como tipo string.
     def __str__(self):
@@ -41,6 +40,10 @@ class Estoque(models.Model):
     quantidade_disponivel = models.IntegerField(default=0)
     data_entrada = models.DateTimeField(auto_now_add=True)
     data_saida = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def valor_unitario(self):
+        return self.produto.preco_padrao
     
 # Entidade Pedido, representa a solicitação de compra do cliente.
 # Serve como um registro inicial de compras, antes da venda ser finalizada. O status de um pedido pode mudar com base no processo de pagamento e venda.
@@ -61,17 +64,6 @@ class Pedido(models.Model):
     def __str__(self):
         return f'Pedido {self.id_pedido} - {self.cliente.nome_cliente}'
     
-# Entidade de Tabela de Preços, serve para armazenar os preços personalizados dos produtos para clientes específicos.
-# Permite fornecer preços diferenciados para diferentes clientes
-class TabelaPreco(models.Model):
-    id_tabela = models.AutoField(primary_key=True)
-    cliente = models.ForeignKey(Cliente,on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    preco_personalizado = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Retorna o preço personalizado para o determinado cliente
-    def __str__(self):
-        return f'Preço personalizado para {self.cliente.nome_cliente} para produto {self.produto.nome_produto}, valor atualizado: {self.preco_personalizado} '
 
 # Entidade Pagamento, representa o pagamento feito para um pedido.
 # Controla detalhes do pagamento, como método (cartão, boleto, etc.) status do pagamento (pendente, aprovado, recusado) e data de processamento.
@@ -99,6 +91,17 @@ class Pagamento(models.Model):
     )
     data_pagamento = models.DateTimeField(auto_now_add=True)
 
+    # Define o valor total da soma dos pedidos do cliente
+    @property
+    def total_pedido(self):
+        total = sum(pedido.quantidade_pedido * pedido.produto.preco_padrao for pedido in Pedido.objects.filter(cliente=self.pedido.cliente))
+        return total
+    
+    # Lista de produtos pedidos pelo cliente
+    @property
+    def produtos_pedidos(self):
+        return [pedido.produto.nome_produto for pedido in Pedido.objects.filter(cliente=self.pedido.cliente)]
+    
     # Retorna o objeto do pagamento e pedido
     def __str__(self):
         return f"Pagamento {self.id_pagamento} - Pedido {self.pedido.id_pedido}"
@@ -121,30 +124,4 @@ class Venda(models.Model):
     def __str__(self):
         return f'Venda: {self.id_venda} - Cliente {self.cliente.nome_cliente}'
     
-# Passivel de remocao    
-# Entidade Item de Venda, representa um produto específico que foi comprado em uma venda.
-# Contém detalhes como a quantidade comprada e o preco unitário no momento da compra.
-class HistoricoCompra(models.Model):
-    id_historico = models.AutoField(primary_key=True)
-    venda = models.ForeignKey(Venda, on_delete=models.CASCADE)
-    
-    @property
-    def exibir_cliente(self):
-        return self.venda.cliente.nome_cliente
-    
-    @property
-    def exibir_produto(self):
-        return self.venda.pedido.produto.nome_produto
-
-    @property
-    def valor_produto(self):
-        return self.venda.pedido.produto.preco_padrao
-
-    @property
-    def metodo_pagamento(self):
-        return self.venda.pagamento.metodo_pagamento
-
-    # Retorna o nome e a quantidade do produto vendida
-    def __str__(self):
-        return f'{self.venda.pedido.produto.nome_produto}'
 

@@ -1,8 +1,7 @@
 # Usando o pacote http para renderizar um JSON quando chegar uma requisicao para determinada URL.
-from django.http import JsonResponse
-from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido, TabelaPreco,  Venda, HistoricoCompra, Pagamento
-from rest_framework import viewsets
-from sistema_pagamentos.serializer import ClienteSerializer, ProdutoSerializer, EstoqueSerializer, PedidoSerializer, TabelaPrecoSerializer,PagamentoSerializer,  VendaSerializer, HistoricoCompraSerializer
+from sistema_pagamentos.models import Cliente, Produto, Estoque, Pedido,  Venda, Pagamento
+from rest_framework import viewsets, generics
+from sistema_pagamentos.serializer import ClienteSerializer, ProdutoSerializer, EstoqueSerializer, PedidoSerializer,PagamentoSerializer,  VendaSerializer, ListaPedidosClienteSerializer
 
 # Views. Utilizando dados da nossa base
 
@@ -22,10 +21,6 @@ class PedidosViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
-class TabelaPrecosViewSet(viewsets.ModelViewSet):
-    queryset = TabelaPreco.objects.all()
-    serializer_class = TabelaPrecoSerializer
-
 class PagamentosViewSet(viewsets.ModelViewSet):
     queryset = Pagamento.objects.all()
     serializer_class = PagamentoSerializer
@@ -34,6 +29,10 @@ class VendasViewSet(viewsets.ModelViewSet):
     queryset = Venda.objects.all()
     serializer_class = VendaSerializer
 
-class HistoricoComprasViewSet(viewsets.ModelViewSet):
-    queryset = HistoricoCompra.objects.all()
-    serializer_class = HistoricoCompraSerializer
+class ListaPedidosCliente(generics.ListAPIView):
+    """Listando os pedidos de um Cliente"""
+    def get_queryset(self):
+        queryset = Pedido.objects.filter(cliente_id = self.kwargs['pk'])
+        return queryset
+    serializer_class = ListaPedidosClienteSerializer
+
