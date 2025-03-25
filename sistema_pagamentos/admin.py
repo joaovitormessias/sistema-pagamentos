@@ -16,7 +16,7 @@ class Clientes(admin.ModelAdmin):
 admin.site.register(Cliente, Clientes)
 
 class Produtos(admin.ModelAdmin):
-    list_display = ('id_produto', 'nome_produto','preco_padrao','descricao_produto','data_validade_produto')
+    list_display = ('id_produto', 'nome_produto','preco_padrao','descricao_produto','data_validade_produto') # remover preco_padrao
     list_display_links = ('id_produto', 'nome_produto','preco_padrao')
     search_fields = ('id_produto','nome_produto',)
     list_per_page = 20
@@ -24,7 +24,7 @@ class Produtos(admin.ModelAdmin):
 admin.site.register(Produto, Produtos)
 
 class Estoques(admin.ModelAdmin):
-    list_display = ('id_estoque', 'produto', 'quantidade_disponivel','valor_unitario', 'data_entrada', 'data_saida')
+    list_display = ('id_estoque', 'produto', 'quantidade_disponivel','valor_unitario', 'data_entrada', 'data_saida') # colocar preco_padrao
     list_display_links = ('id_estoque','produto')
     search_fields = ('id_estoque','produto',)
     list_per_page = 20

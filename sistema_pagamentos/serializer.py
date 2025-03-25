@@ -9,13 +9,13 @@ class ClienteSerializer(serializers.ModelSerializer):
 class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
-        fields = ['id_produto','nome_produto','preco_padrao', 'descricao_produto', 'data_validade_produto']
+        fields = ['id_produto','nome_produto','preco_padrao', 'descricao_produto', 'data_validade_produto'] # remover preco_padrao
 
 class EstoqueSerializer(serializers.ModelSerializer):
     produto = serializers.ReadOnlyField(source='produto.nome_produto')
     class Meta:
         model = Estoque
-        fields = ['id_estoque','produto','quantidade_disponivel', 'valor_unitario', 'data_entrada', 'data_saida']
+        fields = ['id_estoque','produto','quantidade_disponivel', 'valor_unitario', 'data_entrada', 'data_saida'] # adicionar preco_padrao
 
 class PedidoSerializer(serializers.ModelSerializer):
     cliente = serializers.ReadOnlyField(source='cliente.nome_cliente')
@@ -33,6 +33,7 @@ class PagamentoSerializer(serializers.ModelSerializer):
 class VendaSerializer(serializers.ModelSerializer):
     pedido = serializers.ReadOnlyField(source='pagamento.pedido.produto.nome_produto')
     cliente = serializers.ReadOnlyField(source='pagamento.pedido.cliente.nome_cliente')
+    pagamento = serializers.ReadOnlyField(source='pagamento.metodo_pagamento')
     class Meta:
         model = Venda
         fields = ['id_venda','pedido','cliente','pagamento','data_venda','status_venda']

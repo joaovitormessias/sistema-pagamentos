@@ -4,6 +4,7 @@ from rest_framework import viewsets, generics
 from sistema_pagamentos.serializer import ClienteSerializer, ProdutoSerializer, EstoqueSerializer, PedidoSerializer,PagamentoSerializer,  VendaSerializer, ListaPedidosClienteSerializer
 
 # Views. Utilizando dados da nossa base
+# Implementar lógica para notificar o cliente pelo email
 
 class ClientesViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
