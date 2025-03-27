@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+
 
 # O Django vai manipular essas informações com o ORM. 
 # Representação das informações do Banco de Dados.
@@ -44,6 +47,15 @@ class Produto(models.Model):
     # Retorna o objeto nome do produto.
     def __str__(self):
         return self.nome_produto
+
+# Trigger para a task 
+@receiver(pre_save, sender=Produto)
+def checa_mudanca_preco(sender, instance, **kwargs):
+    if instance.pk: 
+        produto_antigo = Produto.objects.get(pk=instance.pk)
+        if produto_antigo.preco_padrao > instance.preco_padrao:
+            from sistema_pagamentos.tasks import notoficar_cliente
+            notoficar_cliente.apply_async(args=[produto_antigo.id_produto])
     
 
 class Estoque(models.Model):

@@ -131,9 +131,10 @@ CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 # Configurando o email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gamil.com'
-EMAIL_PORT = 587
+EMAIL_HOST = 'smtp.gmail.com'
+DEFAULT_FROM_EMAIL = 'joaobombom1@gmail.com'
+EMAIL_HOST_USER = 'joaobombom1@gmail.com'
+EMAIL_HOST_PASSWORD = '101511522'
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'seu_mail'
-EMAIL_HOST_PASSWORD = 'sua_senha'
-DEFAULT_FROM_EMAIL = 'seu_email'
+EMAIL_PORT = 587
+
