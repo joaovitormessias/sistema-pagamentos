@@ -128,3 +128,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # O celery vai fazer uso dessa configuração
 CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
 CELERY_TIMEZONE = 'America/Sao_Paulo'
+
+# Configurando o email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gamil.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'seu_mail'
+EMAIL_HOST_PASSWORD = 'sua_senha'
+DEFAULT_FROM_EMAIL = 'seu_email'
