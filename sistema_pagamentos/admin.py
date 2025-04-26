@@ -48,3 +48,4 @@ class Pagamentos(admin.ModelAdmin):
     list_per_page = 20
 
 admin.site.register(Pagamento, Pagamentos)
+
