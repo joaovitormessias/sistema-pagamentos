@@ -33,3 +33,4 @@ def enviar_email(produto_id):
                 auth_user= config('EMAIL_HOST_USER'),   # E-mail de autenticação
                 auth_password=config('EMAIL_HOST_PASSWORD'), # Senha de autenticação
             )
+            
