@@ -56,7 +56,7 @@ Antes de rodar o projeto, você precisa ter os seguintes itens instalados em seu
 ### 🐳 Uso do Docker
 Para rodar o **RabbitMQ** e configurar o **Celery** em seu projeto, você pode usar o **Docker**. O **RabbitMQ** será utilizado como broker de mensagens para o **Celery**.
 
-1. ** Rodar o RabbitMQ com Docker.** Se você ainda não tem o RabbitMQ rodando, pode usar o seguinte comando para iniciar o RabbitMQ com o Docker:
+1. **Rodar o RabbitMQ com Docker.** Se você ainda não tem o RabbitMQ rodando, pode usar o seguinte comando para iniciar o RabbitMQ com o Docker:
    ```bash
    docker run -it --rm --name rabbitmq -p 15672:15672 rabbitmq:3.13-management
 
