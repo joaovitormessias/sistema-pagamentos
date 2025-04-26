@@ -103,3 +103,4 @@ def gerar_relatorio_pedidos(request, cliente_id):
 
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf') # Retorna o PDF como resposta HTTP
+
