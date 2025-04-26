@@ -1,5 +1,10 @@
+# Modelos da nossa base de dados: é de onde a API vai extrair as informações exigidas
 from sistema_pagamentos.models import Cliente, Produto, Pedido, Pagamento
+
+# Biblioteca do Django Rest que permite criar as viewsets 
 from rest_framework import viewsets
+
+# Serializadores: serão responsáveis por transformar esses dados da nossa base de dados para o formato JSON
 from sistema_pagamentos.serializer import ClienteSerializer, ProdutoSerializer, PedidoSerializer, PagamentoSerializer, CriarEditarPedidoSerializer
 
 from io import BytesIO
@@ -38,7 +43,8 @@ class PedidosViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all()
     
 
-    def get_serializer_class(self):             
+    def get_serializer_class(self):  
+        '''Essa função permite o usuário fazer uma alteração do pedido'''           
         if self.action == 'list' or self.action == 'retrieve':
             return PedidoSerializer
         return CriarEditarPedidoSerializer

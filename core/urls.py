@@ -3,7 +3,10 @@ from django.contrib import admin
 from django.urls import path, include
 from sistema_pagamentos.views import ClientesViewSet, ProdutosViewSet, PedidosViewSet, PagamentosViewSet, gerar_relatorio_pedidos
 
-# Autenticação
+# Aqui criamos as rotas de acesso para que terceiros consigam acessar nossa API 
+# usando as URL´s e seus respectivos endpoints.
+
+# Autenticação.
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -11,11 +14,11 @@ from rest_framework_simplejwt.views import (
 
 from rest_framework import routers
 
-# Documentação
+# Documentação da API.
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
-# Endpoints
+# Endpoints.
 router = routers.DefaultRouter()
 
 router.register('clientes', ClientesViewSet, basename='Clientes')

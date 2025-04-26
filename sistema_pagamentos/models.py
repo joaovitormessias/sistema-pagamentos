@@ -16,7 +16,7 @@ class Cliente(models.Model):
     '''
 
     id_cliente = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE) # CASCADE 'se eu apagar o cliente tudo relacionado ao usuario sera apagado
     nome_cliente = models.CharField(max_length=100, blank=False)
     cnpj = models.CharField(max_length=14, blank=True)
 
@@ -36,7 +36,7 @@ class Produto(models.Model):
     attr: quantidade(int) = quantidade do produto disponível.
     attr: descricao(txt) = campo que contém a descrição do produto.
     '''
-    
+
     id_produto = models.AutoField(primary_key=True)
     nome_produto = models.CharField(max_length=100, blank=False)
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
@@ -71,7 +71,7 @@ class Pedido(models.Model):
     attr: id_pedido(pk) = chave única.
     attr: cliente(fk) = chave estrangeira que herda os atributos da minha entidade Cliente.
     '''
-
+    
     id_pedido = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='pedidos')
 
@@ -85,6 +85,10 @@ class Pedido(models.Model):
 
         '''Permite realizar a soma total do valor do pedido feito pelo cliente.'''
 
+
+        '''
+        Essa função tem a propriedade de realizar o calculo matematico ligado ao total da soma do pedido realizado pelo Cliente
+        '''
         queryset= self.itens.all().aggregate(
             total=models.Sum(models.F('quantidade') * models.F('produto__preco_unitario'))
         )
@@ -102,6 +106,15 @@ class ItensPedido(models.Model):
     attr: quantidade(int) = representa a quantidade de produtos que o cliente vai solicitar.
     '''
     
+
+    '''
+    Essa entidade representa os itens pedidos pelo meu cliente, ou seja, os itens dentro de cada pedido realizado pelo cliente
+
+    params: pedido (fk): é uma chave estrangeira que herda os atributos da minha Classe pedidos relacionada aos itens do pedido
+    params: produto(fk): é uma chave estrangeira que herda os atributos da minha Classe Produto
+    params: quantidade (int): representa a quantidade de itens que meu cliente vai adquirir
+
+    '''
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens')
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='itens_pedido') 
     quantidade = models.IntegerField()
@@ -119,6 +132,15 @@ class Pagamento(models.Model):
     attr: data_pagamento(date) = data da compra quando realizada.
     '''
 
+
+    '''
+    Essa entidade representa a parte final da minha compra sendo ela o Pagamento.
+
+    params: id_pagamento (pk): chave primária
+    params: pedido (fk): chave estrangeira que herda os pedidos realizados pelo cliente
+    params: status_pagamento (char): representa o estado do pagamento do cliente na hora de finalizar sua compra
+    params: data_pagamento (date): data que foi realizado o pagamento do cliente
+    '''
     id_pagamento = models.AutoField(primary_key=True)
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     status_pagamento = models.CharField(

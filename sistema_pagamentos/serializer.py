@@ -38,6 +38,7 @@ class ItensPedidoSerializer(serializers.ModelSerializer):
         model = ItensPedido
         fields = ('produto', 'quantidade','total')
 
+    # Função que retorna o total de cada item pedido
     def get_total(self, instance):
 
         '''
@@ -122,4 +123,4 @@ class PagamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pagamento
         fields = '__all__'
-        depth = 1
+        depth = 1 # exibe mais detalhes do meu pagamento

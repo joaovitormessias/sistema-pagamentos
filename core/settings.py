@@ -121,8 +121,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
+# Definição da lingua
 LANGUAGE_CODE = 'pt-br'
 
+# Definição da região
 TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
@@ -158,6 +160,7 @@ REST_FRAMEWORK = {
 # Configuração do DRF-Spectacular
 # https://drf-spectacular.readthedocs.io/en/latest/readme.html
 
+# Com isso é permitido a documentação da API, com todos os métodos: GET, POST, PUT, PATCH,DELETE
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Sistema de Pagamentos',
     'DESCRIPTION': 'API com os endpoints e documentação do Sistema de Pagamentos',
