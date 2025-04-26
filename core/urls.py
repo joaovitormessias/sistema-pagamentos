@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from sistema_pagamentos.views import ClientesViewSet, ProdutosViewSet, PedidosViewSet, PagamentosViewSet
+from sistema_pagamentos.views import ClientesViewSet, ProdutosViewSet, PedidosViewSet, PagamentosViewSet, gerar_relatorio_pedidos
 
 # Autenticação
 from rest_framework_simplejwt.views import (
@@ -40,5 +40,6 @@ urlpatterns = [
 
     # Registrando os endpoints
     path('api/',include(router.urls)), 
+    path('api/relatorio_pedidos/<int:cliente_id>/', gerar_relatorio_pedidos, name='relatorio_pedidos'),
 
 ]
