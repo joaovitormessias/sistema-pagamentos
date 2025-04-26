@@ -46,3 +46,4 @@ urlpatterns = [
     path('api/relatorio_pedidos/<int:cliente_id>/', gerar_relatorio_pedidos, name='relatorio_pedidos'),
 
 ]
+
