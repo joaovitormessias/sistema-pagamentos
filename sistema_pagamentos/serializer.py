@@ -5,8 +5,8 @@ from sistema_pagamentos.models import Cliente, Produto, Pedido, Pagamento, Itens
 
 
 
-class ClienteSerializer(serializers.ModelSerializer):
-
+class ClienteSerializer(serializers.ModelSerializer): 
+    
     '''
     Serializer para a entidade Cliente, transformando o modelo Cliente em um formato que pode ser facilmente
     convertido para JSON ou outro formato.
