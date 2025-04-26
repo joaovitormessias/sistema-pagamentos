@@ -163,3 +163,18 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+# config celery
+CELERY_TIMEZONE = 'America/Sao_Paulo'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+
+# config email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_PASSWORD = 'szhv ujva mlii edeq'
+EMAIL_PASSWORD = 'Jv$101511522'
+EMAIL_HOST_USER = 'joaovitormessias30@gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
