@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, transaction
+from decimal import Decimal
 from django.contrib.auth.models import User
 
 # -------------------------------- CRIANDO AS ENTIDADES -------------------------------- #
@@ -12,11 +13,11 @@ class Cliente(models.Model):
     attr: id_cliente(pk) = chave única.
     attr: user(onetoone) = herda funcoes da classe User do Django.
     attr: nome_cliente(char) = nome do cliente.
-    attr: cnpj(char) = campo opcional, caso seja uma pessoa juridica. 
+    attr: cnpj(char) = campo opcional, caso seja uma pessoa juridica.
     '''
 
     id_cliente = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE) # CASCADE 'se eu apagar o cliente tudo relacionado ao usuario sera apagado
+    user = models.OneToOneField(User, on_delete=models.CASCADE) # Deleting the user deletes its customer record, not the reverse.
     nome_cliente = models.CharField(max_length=100, blank=False)
     cnpj = models.CharField(max_length=14, blank=True)
 
@@ -47,21 +48,18 @@ class Produto(models.Model):
     # Representação do meu object dentro da tabela: nome do produto
     def __str__(self):
         return self.nome_produto
-    
-    def save(self, *args, **kwargs):
 
-        '''
-        Essa função permite eu verificar se o produto já existe e se o preço foi alterado.\n
-        Ele só compara se o produto já existe no banco e aciona a minha task para envio de mail.
-        '''
-        
-        if self.pk:  
-            old_price = Produto.objects.get(pk=self.pk).preco_unitario
-            if old_price != self.preco_unitario:  
-                from sistema_pagamentos.tasks import enviar_email 
-                enviar_email.delay(self.id_produto)
-        super(Produto, self).save(*args, **kwargs)
-    
+    def save(self, *args, **kwargs):
+        """Notify prior buyers of a price decrease only after the write commits."""
+        old_price = None
+        if self.pk:
+            old_price = type(self).objects.filter(pk=self.pk).values_list('preco_unitario', flat=True).first()
+        price_written = kwargs.get('update_fields') is None or 'preco_unitario' in kwargs['update_fields']
+        super().save(*args, **kwargs)
+        if price_written and old_price is not None and Decimal(str(self.preco_unitario)) < old_price:
+            from sistema_pagamentos.tasks import enviar_email
+            # A worker must never observe an uncommitted price or a rolled-back update.
+            transaction.on_commit(lambda product_id=self.pk: enviar_email.delay(product_id))
 
 class Pedido(models.Model):
 
@@ -71,14 +69,14 @@ class Pedido(models.Model):
     attr: id_pedido(pk) = chave única.
     attr: cliente(fk) = chave estrangeira que herda os atributos da minha entidade Cliente.
     '''
-    
+
     id_pedido = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='pedidos')
 
     # Representação do meu object dentro da tabela: pedido relacionado ao nome do cliente
     def __str__(self):
         return self.cliente.nome_cliente
-    
+
 
     @property
     def total(self):
@@ -93,8 +91,8 @@ class Pedido(models.Model):
             total=models.Sum(models.F('quantidade') * models.F('produto__preco_unitario'))
         )
 
-        return queryset['total']
-                                   
+        return queryset['total'] or Decimal('0.00')
+
 
 class ItensPedido(models.Model):
 
@@ -105,7 +103,7 @@ class ItensPedido(models.Model):
     attr: produto(fk) = chave estrangeira que herda os atributos da minha entidade Produto.
     attr: quantidade(int) = representa a quantidade de produtos que o cliente vai solicitar.
     '''
-    
+
 
     '''
     Essa entidade representa os itens pedidos pelo meu cliente, ou seja, os itens dentro de cada pedido realizado pelo cliente
@@ -116,9 +114,9 @@ class ItensPedido(models.Model):
 
     '''
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens')
-    produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='itens_pedido') 
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='itens_pedido')
     quantidade = models.IntegerField()
-    
+
 
 
 class Pagamento(models.Model):
@@ -154,6 +152,6 @@ class Pagamento(models.Model):
 
 
 
-    
 
-    
+
+

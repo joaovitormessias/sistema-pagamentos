@@ -1,103 +1,107 @@
-# Sistema de Pagamentos
+# Orders and Payments API
 
-### 🚀 Descrição
-O **Sistema de Pagamentos** é uma aplicação web desenvolvida para gerenciar e otimizar o processo de vendas, produtos e pagamentos de clientes. A API REST foi projetada para permitir a gestão de produtos, clientes, pedidos e pagamentos, além de gerar relatórios de vendas e automatizar o envio de notificações por e-mail quando houver alteração de preços de produtos já adquiridos por um cliente.
+**Manage customers, product orders, payment records, and price-drop notifications through a Django REST API.**
 
-### ⚡ Funcionalidades
-- **Cadastro de Produtos e Clientes**: Gerenciamento completo dos dados dos produtos e clientes.
-- **Pedido e Pagamento**: Criação e acompanhamento de pedidos, incluindo o status de pagamentos.
-- **Notificação de Alteração de Preços**: Envio assíncrono de e-mails para clientes quando um produto adquirido tiver o preço alterado para um valor inferior.
-- **Relatório de Vendas**: Geração de relatórios em PDF das vendas realizadas para um cliente, utilizando filtros por CNPJ ou Razão Social.
+This portfolio application connects a small sales workflow: create a customer and products, place an order, record its payment status, and export an order report. A Celery task notifies previous buyers when a product price decreases.
 
-### 📋 Pré-requisitos
-Antes de rodar o projeto, você precisa ter os seguintes itens instalados em seu ambiente de desenvolvimento:
-- **Python 3.x**
-- **Django 5.x**
-- **Celery** para tarefas assíncronas
-- **RabbitMQ** (ou Docker para rodar o RabbitMQ)
-- **Redis** como broker para Celery
-- **django.core.mail** para envio de e-mails
-- **PostgreSQL** (ou outro banco de dados relacional de sua escolha)
-- **Docker**: Para rodar o RabbitMQ.
+**Python · Django · Django REST Framework · JWT · Celery · RabbitMQ · SQLite**
 
-### 🔧 Instalação
+> Development prototype. Payment records are internal bookkeeping; no bank, card processor, settlement, or refund integration is implemented. Only use synthetic customer data for evaluation.
 
-1. **Clone o repositório**
-   ```bash
-   git clone https://github.com/joaovitormessias/sistema-pagamentos.git
-   cd sistema-pagamentos
+## Product workflow
 
-2. **Crie e ative um ambiente virtual**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # No Windows, use `venv\Scripts\activate`
+| Operation | Behavior | Source |
+| --- | --- | --- |
+| Customer/product management | Authenticated CRUD; model permissions control writes | [Viewsets](sistema_pagamentos/views.py) |
+| Order creation | Creates the order and nested items atomically | [Serializers](sistema_pagamentos/serializer.py) |
+| Order update | Supplied items replace the previous collection; omitted items stay unchanged on PATCH | [Serializers](sistema_pagamentos/serializer.py) |
+| Payment recording | Accepts an order ID and a payment status | [Models](sistema_pagamentos/models.py) |
+| Price decrease | Queues a notification after the database commit | [Product save hook](sistema_pagamentos/models.py) |
+| Buyer notification | One email per distinct recipient per task execution | [Celery task](sistema_pagamentos/tasks.py) |
+| PDF report | Staff-only report of a customer's orders | [Report view](sistema_pagamentos/views.py) |
 
-3. **Instale as dependências**
-   ```bash
-   pip install -r requirements.txt
+## Architecture
 
-4. **Crie um arquivo ```.env``` para armazenar suas credenciais**
-   ```bash
-   EMAIL_HOST_USER='seu-email@gmail.com'
-   EMAIL_HOST_PASSWORD='sua-senha'
+```mermaid
+flowchart TD
+    Client["API client / Swagger"] --> API["Django REST + JWT"]
+    API --> DB["SQLite: customers, orders, payments"]
+    DB -->|"after commit"| Broker["RabbitMQ"]
+    Broker --> Worker["Celery worker"]
+    Worker --> Email["Console or configured SMTP"]
+```
 
-5. **Rodar as migrações**
-   ```bash
-   python manage.py migrate
+RabbitMQ is the configured broker. Redis and SendGrid are not required by the current implementation. SQLite is the configured database; PostgreSQL is not configured by this README.
 
-6. **Criar um super Superusuário** para acessar o painel administrativo do Django:
-   ```bash
-   python manage.py runserver
+## Run locally
 
-7. **Subir o servidor de desenvolvimento.** Lembre-se de consultar os endpoints para o acesso completo da API.
-   ```bash
-   python manage.py runserver
+Use Python compatible with Django 5.1 (the requirements pin 5.1.7), Git, and RabbitMQ for asynchronous notifications. The requirements retain the repository's existing pinned versions; dependency upgrades are a separate task.
 
-### 🐳 Uso do Docker
-Para rodar o **RabbitMQ** e configurar o **Celery** em seu projeto, você pode usar o **Docker**. O **RabbitMQ** será utilizado como broker de mensagens para o **Celery**.
+```bash
+git clone https://github.com/joaovitormessias/sistema-pagamentos.git
+cd sistema-pagamentos
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env
+```
 
-1. **Rodar o RabbitMQ com Docker.** Se você ainda não tem o RabbitMQ rodando, pode usar o seguinte comando para iniciar o RabbitMQ com o Docker:
-   ```bash
-   docker run -it --rm --name rabbitmq -p 15672:15672 rabbitmq:3.13-management
+Replace `SECRET_KEY` in `.env` with a locally generated random secret. The default email backend prints messages to the worker console, so no SMTP credentials are needed for a local review.
 
-2. **Inicar o Celery Worker.**Inicie o worker do Celery, que irá processar as tarefas assíncronas:
-   ```bash
-   celery -A sistema_pagamentos.celery_app worker --loglevel=info -P gevent
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
 
-### 📝 Documentação da API
-A documentação da API foi configurada usando o **drf_spectacular** para gerar uma documentação automática e interativa.
-- Acesse a documentação da API gerada automaticamente em:
-  ```bash
-    http://localhost:8000/api/swagger/
+In separate terminals, start the broker and worker:
 
-Essa URL irá fornecer uma interface interativa para testar e visualizar os endpoints da sua API.
+```bash
+docker run --rm --name payments-rabbitmq -p 127.0.0.1:5672:5672 -p 127.0.0.1:15672:15672 rabbitmq:3.13-management
+# Run from the repository root with the virtual environment active:
+celery -A core worker --loglevel=info --pool=solo
+```
 
-### 🛠️ Tecnologias utilizadas
+Open [Swagger](http://localhost:8000/api/swagger/) or [Django admin](http://localhost:8000/admin/). Obtain a JWT with `POST /token/` and send `Authorization: Bearer <access-token>` on protected requests. A superuser is suitable for local evaluation; normal users need the corresponding Django model permissions for writes.
 
-- **Django 5.x:** Framework web utilizado para desenvolvimento da API.
+For SMTP, configure `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`, `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT`, `EMAIL_USE_TLS`, and `DEFAULT_FROM_EMAIL`. Do not commit credentials.
 
-- **Celery:**: Utilizado para envio assíncrono de e-mails quando houver alteração de preços.
+## Example evaluation
 
-- **RabbitMQ:** Usado como broker de mensagens para Celery, gerenciado via Docker.
+1. Create a Django user in admin, then create a customer through `POST /api/clientes/` with `user`, `nome_cliente`, and optional `cnpj`.
+2. Create a product through `POST /api/produtos/` with `nome_produto`, `preco_unitario`, `quantidade`, and `descricao`.
+3. Create an order using actual IDs returned above:
 
-- **Redis:** Broker de mensagens utilizado pelo Celery.
+```json
+{"cliente": 1, "itens": [{"produto": 1, "quantidade": 2}]}
+```
 
-- **SendGrid:** Serviço para envio de e-mails.
+Send it to `POST /api/pedidos/`. Record a payment with `POST /api/pagamentos/`:
 
-- **drf_spectacular:** Utilizado para gerar a documentação da API.
+```json
+{"pedido": 1, "status_pagamento": "realizado"}
+```
 
-- **Django REST Framework (DRF):** Para construção de APIs RESTful.
+4. Lower the product price through PATCH and inspect the worker's console email.
+5. As staff, request `GET /api/relatorio_pedidos/1/` for the customer report.
 
-- **JWT (JSON Web Token):** Usado para autenticação, através do pacote rest_framework_simplejwt.
+Status values are `naorealizado`, `realizado`, `emandamento`, and `recusado`. Domain field names remain Portuguese to match the API.
 
-- **Django Jazzmin:** Para uma interface de administração personalizada.
+## Verification
 
-### 🧑‍💻 Autores
+```bash
+python manage.py check
+python manage.py test sistema_pagamentos
+```
 
-- **João Vitor Messias:** *Desenvolvedor Principal*
+Eight regression tests exercise item replacement, omitted/empty items, invalid quantity, payment creation, deferred notifications, duplicate recipients, and report authorization. They passed in the review environment using Django 5.2.8; the complete pinned-dependency installation and external RabbitMQ/SMTP delivery were not exercised. Tests use an isolated database and mocked task dispatch/in-memory email.
 
-### 📄 Licença
-Este projeto está sob a licença MIT - veja o arquivo LICENSE para detalhes.
+## Design limits and next steps
 
-### 🎁 Agradecimentos
-- Agradecemos à comunidade do Django, Celery, RabbitMQ, DRF, e outras bibliotecas utilizadas, pela excelente documentação e suporte.
+- Order totals use **current product prices**, not a historical purchase-price snapshot. Orders do not reserve or decrement stock.
+- Payment timestamps are record-creation timestamps; status changes do not prove money movement.
+- After-commit dispatch prevents premature notification but is not a durable outbox. Broker failure after commit and duplicate task delivery need an explicit retry/idempotency design.
+- API reads are authenticated but not scoped by customer ownership. This is an administrative prototype, not a multi-tenant customer portal.
+- Add price snapshots, stock constraints, durable notifications, and deployment hardening before production use.
+
+[MIT license](LICENSE) · [Maintainer](https://github.com/joaovitormessias)
