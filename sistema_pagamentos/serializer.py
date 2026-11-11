@@ -1,12 +1,13 @@
 from rest_framework import serializers
+from django.db import transaction
 from sistema_pagamentos.models import Cliente, Produto, Pedido, Pagamento, ItensPedido
 
 # -------------------------------- SERIALIZANDO DADOS -------------------------------- #
 
 
 
-class ClienteSerializer(serializers.ModelSerializer): 
-    
+class ClienteSerializer(serializers.ModelSerializer):
+
     '''
     Serializer para a entidade Cliente, transformando o modelo Cliente em um formato que pode ser facilmente
     convertido para JSON ou outro formato.
@@ -55,7 +56,7 @@ class PedidoSerializer(serializers.ModelSerializer):
 
     itens = ItensPedidoSerializer(many=True)
     cliente = ClienteSerializer()
-    
+
     class Meta:
         model = Pedido
         fields = ('id_pedido','cliente', 'itens','total')
@@ -70,6 +71,7 @@ class CriarEditarItensPedidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItensPedido
         fields = ('produto', 'quantidade')
+        extra_kwargs = {'quantidade': {'min_value': 1}}
 
 class CriarEditarPedidoSerializer(serializers.ModelSerializer):
 
@@ -80,8 +82,9 @@ class CriarEditarPedidoSerializer(serializers.ModelSerializer):
     itens = CriarEditarItensPedidoSerializer(many=True)
     class Meta:
         model = Pedido
-        fields = ('cliente','itens')      
+        fields = ('cliente','itens')
 
+    @transaction.atomic
     def create(self, validated_data):
 
         '''
@@ -94,21 +97,17 @@ class CriarEditarPedidoSerializer(serializers.ModelSerializer):
             ItensPedido.objects.create(pedido= pedido, **item)
         pedido.save()
         return pedido
-    
+
+    @transaction.atomic
     def update(self, instance, validated_data):
-
-        '''
-        Atualização de um pedido existente, incluindo a atualização de seus itens.
-        '''
-
-        itens = validated_data.pop('itens')
-        if itens:
-            instance.itens.all()
+        """Replace supplied items atomically; omitted items remain unchanged on PATCH."""
+        itens = validated_data.pop('itens', None)
+        instance = super().update(instance, validated_data)
+        if itens is not None:
+            instance.itens.all().delete()
             for item in itens:
-                ItensPedido.objects.create(pedido = instance, **item)
-            instance.save()
+                ItensPedido.objects.create(pedido=instance, **item)
         return instance
-    pass
 
 
 class PagamentoSerializer(serializers.ModelSerializer):
@@ -116,9 +115,9 @@ class PagamentoSerializer(serializers.ModelSerializer):
     '''
     Serializer para a entidade Pagamento, incluindo informações do cliente e do pedido.
     '''
-    
-    cliente = ClienteSerializer(read_only=True)
-    pedido = PedidoSerializer(read_only=True)
+
+    cliente = ClienteSerializer(source='pedido.cliente', read_only=True)
+    pedido = serializers.PrimaryKeyRelatedField(queryset=Pedido.objects.all())
 
     class Meta:
         model = Pagamento
